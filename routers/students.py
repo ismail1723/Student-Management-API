@@ -4,7 +4,7 @@ from sqlalchemy import asc
 
 from auth import get_current_user
 from database import get_db
-from models import Student
+from models import Student, User
 from schemas import StudentCreate, StudentResponse
 
 router = APIRouter()
@@ -19,10 +19,12 @@ def get_students(
     department: str = None,
     sort_by: str = None,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
 
-    query = db.query(Student)
+    query = db.query(Student).filter(
+    Student.user_id == current_user.id
+    )
 
     if department:
         query = query.filter(
@@ -53,11 +55,12 @@ def get_students(
 def get_student(
     student_id: int,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
 
     student = db.query(Student).filter(
-        Student.id == student_id
+        Student.id == student_id,
+        Student.user_id == current_user.id
     ).first()
 
     if student is None:
@@ -75,11 +78,12 @@ def get_student(
 def search_student(
     name: str,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
 
     student = db.query(Student).filter(
-        Student.name.ilike(f"%{name}%")
+    Student.name.ilike(f"%{name}%"),
+    Student.user_id == current_user.id
     ).first()
 
     if student is None:
@@ -95,10 +99,11 @@ def update_student(
     student_id: int,
     student: StudentCreate,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     db_student = db.query(Student).filter(
-        Student.id == student_id
+    Student.id == student_id,
+    Student.user_id == current_user.id
     ).first()
 
     if db_student is None:
@@ -121,11 +126,12 @@ def update_student(
 def delete_student(
     student_id: int,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
 
     student = db.query(Student).filter(
-        Student.id == student_id
+    Student.id == student_id,
+    Student.user_id == current_user.id
     ).first()
 
     if student is None:
@@ -139,4 +145,27 @@ def delete_student(
 
     return {
         "message": "Student Deleted Successfully"
+    }
+
+@router.post("/students")
+def create_student(
+    student: StudentCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+
+    db_student = Student(
+    name=student.name,
+    age=student.age,
+    department=student.department,
+    user_id=current_user.id
+    )
+
+    db.add(db_student)
+    db.commit()
+    db.refresh(db_student)
+
+    return {
+        "message": "Student Created Successfully",
+        "student": db_student
     }
