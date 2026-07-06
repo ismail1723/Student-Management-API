@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import asc
+from logger_config import logger
 
 from auth import get_current_user
 from database import get_db
@@ -46,6 +47,10 @@ def get_students(
         .limit(limit)\
         .all()
 
+    logger.info(
+    f"{current_user.username} viewed student list"
+    )
+
     return students
 
 @router.get(
@@ -68,6 +73,10 @@ def get_student(
             status_code=404,
             detail="Student not found"
         )
+
+    logger.info(
+    f"Student '{student.name}' viewed by {current_user.username}"
+    )
 
     return student
 
@@ -92,6 +101,10 @@ def search_student(
             detail="Student not found"
         )
 
+    logger.info(
+    f"Student '{student.name}' searched by {current_user.username}"
+    )
+
     return student
 
 @router.put("/students/{student_id}")
@@ -115,8 +128,13 @@ def update_student(
     db_student.name = student.name
     db_student.age = student.age
     db_student.department = student.department
+    db_student.email = student.email
 
     db.commit()
+
+    logger.info(
+    f"Student '{db_student.name}' updated by {current_user.username}"
+    )
 
     return {
         "message": "Student Updated Successfully"
@@ -140,6 +158,10 @@ def delete_student(
             detail="Student not found"
         )
 
+    logger.info(
+    f"Student '{student.name}' deleted by {current_user.username}"
+    )
+
     db.delete(student)
     db.commit()
 
@@ -158,12 +180,17 @@ def create_student(
     name=student.name,
     age=student.age,
     department=student.department,
+    email=student.email,
     user_id=current_user.id
     )
 
     db.add(db_student)
     db.commit()
     db.refresh(db_student)
+
+    logger.info(
+    f"Student '{db_student.name}' created by {current_user.username}"
+    )
 
     return {
         "message": "Student Created Successfully",
