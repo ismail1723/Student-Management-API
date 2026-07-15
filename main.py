@@ -3,8 +3,11 @@ from models import Base
 
 from database import engine
 from routers import students, users
+from exception_handler import add_exception_handlers
 
 app = FastAPI()
+
+add_exception_handlers(app)
 
 Base.metadata.create_all(bind=engine)
 

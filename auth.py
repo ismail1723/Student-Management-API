@@ -7,6 +7,12 @@ from models import User
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
+from config import (
+    SECRET_KEY,
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES
+)
+
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -25,8 +31,6 @@ def verify_password(
         hashed_password
     )
 
-SECRET_KEY = "mysecretkey123"
-ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="login"
@@ -36,7 +40,9 @@ def create_access_token(data: dict):
 
     to_encode = data.copy()
 
-    expire = datetime.utcnow() + timedelta(minutes=30)
+    expire = datetime.utcnow() + timedelta(
+    minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
 
     to_encode.update({"exp": expire})
 

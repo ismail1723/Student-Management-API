@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -11,6 +11,7 @@ class Student(Base):
     age = Column(Integer)
     department = Column(String)
     email = Column(String, unique=True)
+    is_deleted = Column(Boolean, default=False)
 
     user_id = Column(
         Integer,
